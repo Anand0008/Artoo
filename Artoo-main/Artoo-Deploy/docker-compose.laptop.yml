@@ -1,0 +1,58 @@
+# Copyright (c) 2025-2026 Telomere LLC. All rights reserved.
+# Artoo — Laptop Override (adds local PostgreSQL)
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.laptop.yml up -d
+#
+# This override:
+#   - Adds a local PostgreSQL container (no RDS needed)
+#   - Points all services to the local database
+#   - Persists data in a Docker volume
+
+services:
+
+  # ── Local PostgreSQL ───────────────────────────────────────
+  postgres:
+    image: postgres:16
+    container_name: artoo_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: artoo
+      POSTGRES_USER: artoo
+      POSTGRES_PASSWORD: localdev
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - artoo_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U artoo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Override: point services to local PostgreSQL ────────────
+  artoo_scheduler:
+    depends_on:
+      postgres:
+        condition: service_healthy
+      artoo_metrics:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://<user>:<password>@postgres:5432/artoo
+
+  artoo_metrics:
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://<user>:<password>@postgres:5432/artoo
+
+  artoo_dashboard:
+    environment:
+      DATABASE_URL: postgresql://<user>:<password>@postgres:5432/artoo
+
+volumes:
+  pgdata:
+    driver: local

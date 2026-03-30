@@ -1,0 +1,98 @@
+# Copyright (c) 2025-2026 Telomere LLC. All rights reserved.
+# Artoo — Production Docker Compose (EC2 + RDS PostgreSQL)
+#
+# Usage:
+#   1. Copy .env.example to .env and fill in your credentials
+#   2. Set DATABASE_URL to your RDS PostgreSQL endpoint
+#   3. docker compose up -d
+
+x-common-env: &common-env
+  env_file:
+    - .env
+  environment:
+    ACTIVITY_LOG_PATH: /app/logs/activity.jsonl
+    LLM_LOG_PATH: /app/logs/llm_calls.jsonl
+    PYTHONUNBUFFERED: "1"
+    PYTHONIOENCODING: "utf-8"
+
+services:
+
+  # ── Scheduler: polls Jira, runs the full agent pipeline ────
+  artoo_scheduler:
+    image: artoo:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: artoo_scheduler
+    restart: unless-stopped
+    <<: *common-env
+    volumes:
+      - artoo_logs:/app/logs
+    networks:
+      - artoo_net
+    depends_on:
+      artoo_metrics:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "from scheduler.poller import is_scheduler_running; assert is_scheduler_running()"]
+      interval: 60s
+      timeout: 15s
+      retries: 3
+      start_period: 30s
+
+  # ── Metrics API: FastAPI on port 8080 ──────────────────────
+  artoo_metrics:
+    image: artoo:latest
+    container_name: artoo_metrics
+    command: ["python", "main.py", "--mode", "metrics-server"]
+    restart: unless-stopped
+    <<: *common-env
+    ports:
+      - "8080:8080"
+    volumes:
+      - artoo_logs:/app/logs:ro
+    networks:
+      - artoo_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # ── Dashboard: Streamlit UI on port 8501 ───────────────────
+  artoo_dashboard:
+    image: artoo:latest
+    container_name: artoo_dashboard
+    command: ["streamlit", "run", "dashboard.py",
+              "--server.port", "8501",
+              "--server.address", "0.0.0.0",
+              "--server.headless", "true",
+              "--browser.gatherUsageStats", "false"]
+    restart: unless-stopped
+    <<: *common-env
+    environment:
+      METRICS_API_URL: http://artoo_metrics:8080
+    ports:
+      - "8501:8501"
+    volumes:
+      - artoo_logs:/app/logs:ro
+    networks:
+      - artoo_net
+    depends_on:
+      artoo_metrics:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  artoo_logs:
+    driver: local
+
+networks:
+  artoo_net:
+    driver: bridge

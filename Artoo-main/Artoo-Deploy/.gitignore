@@ -1,0 +1,48 @@
+# Environment (secrets)
+.env
+*.env
+!.env.example
+
+# Build output
+src/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.so
+*.egg-info/
+dist/
+build/
+.coverage
+htmlcov/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker volumes
+docker-volumes/
+
+# AWS / credential files
+*.csv
+*accessKeys*
+*access_keys*
+
+# Claude Code local config
+.claude/
+
+# Logs
+logs/
+*.log

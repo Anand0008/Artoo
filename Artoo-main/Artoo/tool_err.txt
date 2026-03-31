@@ -1,0 +1,28 @@
+Traceback (most recent call last):
+  File "<string>", line 12, in run
+  File "<HOME>\Downloads\Artoo-main\Artoo-main\Artoo\venv4\Lib\site-packages\langchain_core\tools\structured.py", line 70, in ainvoke
+    return await super().ainvoke(input, config, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<HOME>\Downloads\Artoo-main\Artoo-main\Artoo\venv4\Lib\site-packages\langchain_core\tools\base.py", line 652, in ainvoke
+    return await self.arun(tool_input, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<HOME>\Downloads\Artoo-main\Artoo-main\Artoo\venv4\Lib\site-packages\langchain_core\tools\base.py", line 1131, in arun
+    raise error_to_raise
+  File "<HOME>\Downloads\Artoo-main\Artoo-main\Artoo\venv4\Lib\site-packages\langchain_core\tools\base.py", line 1097, in arun
+    response = await coro_with_context(coro, context)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<HOME>\Downloads\Artoo-main\Artoo-main\Artoo\venv4\Lib\site-packages\langchain_core\tools\structured.py", line 124, in _arun
+    return await self.coroutine(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<HOME>\Downloads\Artoo-main\Artoo-main\Artoo\venv4\Lib\site-packages\langchain_mcp_adapters\tools.py", line 414, in call_tool
+    return _convert_call_tool_result(call_tool_result)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<HOME>\Downloads\Artoo-main\Artoo-main\Artoo\venv4\Lib\site-packages\langchain_mcp_adapters\tools.py", line 189, in _convert_call_tool_result
+    raise ToolException(error_msg)
+langchain_core.tools.base.ToolException: 2 validation errors for call[search]
+fields
+  Input should be a valid string [type=string_type, input_value=['summary', 'status', 'assignee'], input_type=list]
+    For further information visit https://errors.pydantic.dev/2.12/v/string_type
+max_results
+  Unexpected keyword argument [type=unexpected_keyword_argument, input_value=10, input_type=int]
+    For further information visit https://errors.pydantic.dev/2.12/v/unexpected_keyword_argument
